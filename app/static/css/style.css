@@ -1,0 +1,772 @@
+/* Dark is this app's native theme — defined on bare :root — with light as
+   an explicit override. Covers three states: an explicit user choice
+   stamps data-theme="light" or "dark" on <html>; the default "auto" state
+   stamps neither and instead follows prefers-color-scheme. */
+:root {
+  --bg: #0f1117;
+  --panel: #171a23;
+  --panel-2: #1e222d;
+  --border: #2a2f3d;
+  --text: #e6e8ee;
+  --text-dim: #9aa1b1;
+  /* Editable field background/border — a step lighter than the ambient
+     --panel/--panel-2/--border so an input never blends into whichever
+     panel color it happens to sit on (a form inside a --panel-2 modal, for
+     instance). Light theme goes all the way to white; dark theme can't go
+     lighter than --text, so it steps up via a lighter gray + border instead. */
+  --field-bg: #262b39;
+  --field-border: #3d4459;
+  --accent: #5b8cff;
+  /* Filled-button background: a deeper shade than --accent (used for
+     links/borders/focus, never as a text backdrop) so white button text
+     clears WCAG AA (4.5:1) — --accent itself is too light for that. */
+  --accent-strong: #3a5fd0;
+  --accent-text: #ffffff;
+  --crit: #ff4d6d;
+  --high: #ff9f43;
+  --med: #ffd43b;
+  --low: #6bc47d;
+  --info: #7a8296;
+  --radius: 8px;
+  color-scheme: dark;
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg: #f6f7f9;
+    --panel: #ffffff;
+    --panel-2: #eef0f3;
+    --border: #dde1e7;
+    --text: #14161c;
+    --text-dim: #5b6270;
+    --field-bg: #ffffff;
+    --field-border: #c3c9d3;
+    --accent: #3763e0;
+    --accent-strong: #2a4fc4;
+    --accent-text: #ffffff;
+    --crit: #d92d4c;
+    --high: #c9711c;
+    --med: #a17d00;
+    --low: #1f8a4c;
+    --info: #5b6270;
+    color-scheme: light;
+  }
+}
+
+:root[data-theme="light"] {
+  --bg: #f6f7f9;
+  --panel: #ffffff;
+  --panel-2: #eef0f3;
+  --border: #dde1e7;
+  --text: #14161c;
+  --text-dim: #5b6270;
+  --field-bg: #ffffff;
+  --field-border: #c3c9d3;
+  --accent: #3763e0;
+  --accent-strong: #2a4fc4;
+  --accent-text: #ffffff;
+  --crit: #d92d4c;
+  --high: #c9711c;
+  --med: #a17d00;
+  --low: #1f8a4c;
+  --info: #5b6270;
+  color-scheme: light;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  font-size: 14px;
+}
+
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+code {
+  background: var(--panel-2);
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 12px 24px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.brand { font-weight: 700; color: var(--text); font-size: 15px; }
+
+.envnav { display: flex; align-items: center; gap: 16px; }
+.envnav a { color: var(--text-dim); padding: 4px 0; border-bottom: 2px solid transparent; }
+.envnav a.active, .envnav a:hover { color: var(--text); border-bottom-color: var(--accent); text-decoration: none; }
+
+.global-mutelist-link {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-dim);
+  font-size: 13px;
+  padding: 4px 0;
+  border-bottom: 2px solid transparent;
+}
+.global-mutelist-link.active, .global-mutelist-link:hover { color: var(--text); border-bottom-color: var(--accent); text-decoration: none; }
+
+.theme-switcher {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 2px;
+}
+.theme-switcher button {
+  background: transparent;
+  border: none;
+  border-radius: 999px;
+  color: var(--text-dim);
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  font-size: 13px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.theme-switcher button:hover { color: var(--text); }
+.theme-switcher button.active {
+  background: var(--panel);
+  color: var(--text);
+  box-shadow: 0 0 0 1px var(--border);
+}
+
+.env-badge {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 999px;
+  letter-spacing: .04em;
+}
+/* Environments are auto-discovered from data/*.csv, so colors are assigned
+   by index (env-color-0..7) rather than by name — see envColor() in
+   static/js/env-color.js and the Jinja filter of the same name. Each has a
+   dark-theme value (dark chip, bright text) and a light-theme override
+   (light chip, saturated dark text) below. */
+.env-color-0 { background: #1f3a5f; color: #7fb2ff; }
+.env-color-1 { background: #3a2f5f; color: #b49bff; }
+.env-color-2 { background: #2f3a4a; color: #a8b5c9; }
+.env-color-3 { background: #1f5f3a; color: #7fffb2; }
+.env-color-4 { background: #5f4a1f; color: #ffcc7f; }
+.env-color-5 { background: #1f4f5f; color: #7fe0ff; }
+.env-color-6 { background: #4a1f5f; color: #d17fff; }
+.env-color-7 { background: #5f3a1f; color: #ff9f7f; }
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) .env-color-0 { background: #dce8fb; color: #1d4e94; }
+  :root:not([data-theme="dark"]) .env-color-1 { background: #e7defc; color: #5b3ba8; }
+  :root:not([data-theme="dark"]) .env-color-2 { background: #e2e6eb; color: #3c4756; }
+  :root:not([data-theme="dark"]) .env-color-3 { background: #d9f2e3; color: #1c7a45; }
+  :root:not([data-theme="dark"]) .env-color-4 { background: #faedd4; color: #8a5a0a; }
+  :root:not([data-theme="dark"]) .env-color-5 { background: #d8eef5; color: #17677f; }
+  :root:not([data-theme="dark"]) .env-color-6 { background: #f0defb; color: #7a2ea3; }
+  :root:not([data-theme="dark"]) .env-color-7 { background: #fbe3d4; color: #a1491a; }
+}
+:root[data-theme="light"] .env-color-0 { background: #dce8fb; color: #1d4e94; }
+:root[data-theme="light"] .env-color-1 { background: #e7defc; color: #5b3ba8; }
+:root[data-theme="light"] .env-color-2 { background: #e2e6eb; color: #3c4756; }
+:root[data-theme="light"] .env-color-3 { background: #d9f2e3; color: #1c7a45; }
+:root[data-theme="light"] .env-color-4 { background: #faedd4; color: #8a5a0a; }
+:root[data-theme="light"] .env-color-5 { background: #d8eef5; color: #17677f; }
+:root[data-theme="light"] .env-color-6 { background: #f0defb; color: #7a2ea3; }
+:root[data-theme="light"] .env-color-7 { background: #fbe3d4; color: #a1491a; }
+
+.content { padding: 24px; max-width: 1400px; margin: 0 auto; }
+
+h1 { font-size: 20px; margin: 0 0 4px; }
+.subtle { color: var(--text-dim); font-size: 13px; margin: 0 0 16px; }
+.text-muted { color: var(--text-dim); }
+
+.summary-bar {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px 24px;
+  margin-top: 16px;
+  max-width: 50%;
+  min-width: 420px;
+}
+.summary-bar-title {
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: var(--text-dim);
+  margin: 0 0 10px;
+}
+.summary-bar .card-total { font-size: 26px; }
+.summary-bar .fp-meter-track { height: 10px; }
+.summary-bar .stat-list { margin-top: 14px; margin-bottom: 0; max-width: 50%; }
+
+.env-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+.env-card {
+  display: block;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  transition: border-color .12s, box-shadow .12s;
+}
+.env-card[data-href] { cursor: pointer; }
+.env-card[data-href]:hover {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+.env-card[data-href]:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent);
+}
+.env-card-head { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+.provider-icons { display: flex; align-items: center; gap: 6px; }
+.provider-icon { width: 18px; height: 18px; object-fit: contain; border-radius: 3px; }
+.card-total {
+  font-size: 22px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  margin-bottom: 12px;
+}
+.card-total-label {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-dim);
+  margin-left: 4px;
+}
+
+.fp-meter { margin-bottom: 14px; }
+.fp-meter-track {
+  display: flex;
+  height: 8px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--panel-2);
+  gap: 2px;
+}
+.fp-seg { height: 100%; }
+.fp-seg-fail { background: var(--crit); }
+.fp-seg-muted {
+  background: #5a2a35; /* fallback for browsers without color-mix() */
+  background: color-mix(in srgb, var(--crit) 35%, var(--panel-2));
+}
+.fp-seg-pass { background: var(--low); }
+.fp-meter-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+.fp-label-fail::before, .fp-label-pass::before {
+  content: "";
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  margin-right: 5px;
+  vertical-align: middle;
+}
+.fp-label-fail::before { background: var(--crit); }
+.fp-label-pass::before { background: var(--low); }
+
+.fp-seg-group-unmuted { background: var(--crit); }
+.fp-seg-group-partial { background: var(--high); }
+.fp-seg-group-muted { background: var(--low); }
+.fp-label-group-unmuted::before, .fp-label-group-partial::before, .fp-label-group-muted::before {
+  content: "";
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  margin-right: 5px;
+  vertical-align: middle;
+}
+.fp-label-group-unmuted::before { background: var(--crit); }
+.fp-label-group-partial::before { background: var(--high); }
+.fp-label-group-muted::before { background: var(--low); }
+
+.stat-list {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 4px 12px;
+  margin: 0 0 16px;
+}
+.stat-list dt { color: var(--text-dim); }
+.stat-list dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; }
+.env-card-links { display: flex; gap: 12px; flex-wrap: wrap; }
+
+.toolbar {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.toolbar input[type="search"] {
+  flex: 0 1 280px;
+  min-width: 180px;
+}
+.toolbar .add-rule-toggle {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+input, select, button {
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 6px;
+  padding: 7px 10px;
+  font-size: 13px;
+}
+input:not([type="checkbox"]):not([type="radio"]):not([readonly]) {
+  background: var(--field-bg);
+  border-color: var(--field-border);
+}
+button {
+  cursor: pointer;
+  background: var(--accent-strong);
+  border-color: var(--accent-strong);
+  color: var(--accent-text);
+  font-weight: 600;
+}
+button:hover { filter: brightness(1.12); }
+button.secondary { background: var(--panel-2); color: var(--text); border-color: var(--border); }
+button.danger { background: var(--crit); border-color: var(--crit); color: #ffffff; }
+
+/* Compact icon-only buttons (Edit/Remove in table rows) so the actions
+   column doesn't need to reserve room for full button labels. */
+.icon-btn {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  line-height: 1;
+}
+/* Plain table-cell (not flex) so it keeps the default vertical-align:
+   middle and actually centers within a row that's been stretched tall by
+   another cell's wrapped text — a flex td's own box doesn't reliably pick
+   up the row's full height, so align-items:center on it had nothing to
+   center within. The gap comes from the inner wrapper instead. */
+.actions-cell { vertical-align: middle; white-space: nowrap; }
+.actions-cell-inner { display: flex; align-items: center; gap: 6px; }
+/* .secondary alone matches the row-hover background (--panel-2) and
+   disappears on hover — give the icon variant its own border so it stays
+   visibly a button. */
+.icon-btn.secondary { background: var(--panel); border-color: var(--border); }
+.icon-btn.secondary:hover { background: var(--panel-2); border-color: var(--text-dim); }
+
+.ms-wrap { position: relative; }
+.ms-btn {
+  min-width: 110px;
+  text-align: left;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.ms-btn::after {
+  content: "▾";
+  font-size: 10px;
+  color: var(--text-dim);
+  flex-shrink: 0;
+}
+.ms-panel {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px;
+  max-height: 260px;
+  overflow: auto;
+  min-width: 220px;
+  z-index: 20;
+  box-shadow: 0 8px 24px rgba(0,0,0,.4);
+}
+.ms-panel label { display: flex; align-items: center; gap: 6px; padding: 4px 6px; font-size: 13px; border-radius: 4px; cursor: pointer; }
+.ms-panel label:hover { background: var(--panel); }
+
+.result-summary { color: var(--text-dim); margin: 8px 0; font-size: 13px; }
+
+.table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius); }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+th { background: var(--panel); color: var(--text-dim); font-weight: 600; position: sticky; top: 0; }
+.sortable-th { cursor: pointer; user-select: none; white-space: nowrap; }
+.sortable-th:hover { color: var(--text); }
+.sortable-th.active { color: var(--text); }
+tbody tr:hover { background: var(--panel-2); cursor: pointer; }
+tbody tr.rule-preview-row:hover { background: none; cursor: default; }
+td.wrap { white-space: normal; }
+
+/* Mutelist tables (single-env page's #rules-table, and each provider
+   group's .rules-table on the all-mutes overview) have too many free-text
+   columns (check id, resource regex, reason) to fit on one line at any
+   reasonable width — wrap them instead of forcing horizontal scroll. */
+#rules-table, .rules-table { table-layout: fixed; }
+#rules-table th, #rules-table td, .rules-table th, .rules-table td {
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+#rules-table-wrap { overflow-x: visible; }
+#rules-table th:nth-child(3), #rules-table td:nth-child(3) { width: 22%; }
+
+.badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+.badge-PASS { background: rgba(107,196,125,.15); color: var(--low); }
+.badge-FAIL { background: rgba(255,77,109,.15); color: var(--crit); }
+.badge-MANUAL { background: rgba(122,130,150,.15); color: var(--info); }
+.badge-muted-yes { background: rgba(107,196,125,.15); color: var(--low); }
+.badge-muted-no { background: rgba(122,130,150,.15); color: var(--info); }
+
+.sev-critical, .dot-critical { color: var(--crit); }
+.sev-high, .dot-high { color: var(--high); }
+.sev-medium, .dot-medium { color: var(--med); }
+.sev-low, .dot-low { color: var(--low); }
+.sev-informational, .dot-informational { color: var(--info); }
+
+.pill-sev {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  border: 1px solid currentColor;
+}
+
+.muted-yes { color: var(--text-dim); }
+.muted-no { color: var(--text); }
+
+.pager { display: flex; gap: 8px; align-items: center; margin-top: 12px; }
+.pager button:disabled { opacity: .4; cursor: default; }
+
+.detail-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(5, 6, 10, .6);
+  backdrop-filter: blur(1px);
+  z-index: 29;
+}
+.detail-panel {
+  position: fixed;
+  top: 0; right: 0; bottom: 0;
+  width: min(640px, 100%);
+  background: var(--panel-2);
+  border-left: 3px solid var(--accent);
+  padding: 24px;
+  overflow-y: auto;
+  box-shadow: -16px 0 48px rgba(0,0,0,.55);
+  z-index: 30;
+}
+.close-btn {
+  position: absolute; top: 14px; right: 14px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  width: 32px; height: 32px;
+  color: var(--text-dim);
+  font-size: 20px; line-height: 1;
+  cursor: pointer;
+}
+.close-btn:hover { color: var(--text); border-color: var(--accent); }
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(5, 6, 10, .6);
+  backdrop-filter: blur(1px);
+  z-index: 29;
+  align-items: flex-start;
+  justify-content: center;
+  overflow-y: auto;
+  padding: 48px 16px;
+}
+.modal-backdrop:not([hidden]) { display: flex; }
+.modal-panel {
+  position: relative;
+  width: min(880px, 100%);
+  max-height: calc(100vh - 96px);
+  display: flex;
+  flex-direction: column;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  box-shadow: 0 16px 48px rgba(0,0,0,.55);
+  z-index: 30;
+  overflow-y: auto;
+}
+.modal-panel h2 { margin-top: 0; }
+/* Cap the mute-rule preview's own table so a rule matching hundreds of
+   findings scrolls internally instead of pushing the Confirm/Cancel
+   buttons out of view (which otherwise requires scrolling the whole
+   modal — and easy to lose — to find them). */
+.modal-panel .mute-preview .preview-table-wrap { max-height: 260px; overflow-y: auto; }
+.modal-panel .mute-preview .preview-table-wrap thead th { position: sticky; top: 0; background: var(--panel-2); }
+table.detail-fields {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  font-size: 12.5px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+table.detail-fields tr:not(:last-child) th,
+table.detail-fields tr:not(:last-child) td {
+  border-bottom: 1px solid var(--border);
+}
+table.detail-fields th {
+  width: 110px;
+  text-align: left;
+  vertical-align: top;
+  color: var(--text-dim);
+  font-weight: 400;
+  background: var(--panel);
+  padding: 6px 10px;
+  white-space: nowrap;
+}
+table.detail-fields td {
+  padding: 6px 10px;
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+}
+table.detail-fields code { font-size: 11.5px; word-break: break-all; }
+.detail-body h3 { margin-top: 20px; margin-bottom: 6px; font-size: 13px; color: var(--text-dim); text-transform: uppercase; letter-spacing: .03em; }
+
+.group-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 6px;
+  overflow: hidden;
+}
+.group-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 7px 14px;
+  cursor: pointer;
+}
+.group-head:hover { background: var(--panel-2); }
+.group-title {
+  flex: 1;
+  min-width: 0;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.group-meta { display: flex; gap: 14px; color: var(--text-dim); font-size: 12px; white-space: nowrap; }
+.mute-check-btn, .mute-resource-btn { padding: 4px 10px; font-size: 12px; }
+.status-badges { display: flex; gap: 4px; flex-wrap: wrap; }
+.group-body { border-top: 1px solid var(--border); padding: 0; display: none; }
+.group-body.open { display: block; }
+.group-body table { font-size: 12px; }
+.compact-table th, .compact-table td { padding: 5px 10px; white-space: nowrap; }
+.compact-table td.wrap { white-space: normal; }
+.resource-row:hover { background: var(--panel-2); cursor: pointer; }
+.group-explain {
+  padding: 14px;
+  border-bottom: 1px solid var(--border);
+  background: var(--panel-2);
+}
+.group-explain h4 {
+  margin: 12px 0 4px;
+  font-size: 12px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: .03em;
+}
+.group-explain h4:first-child { margin-top: 0; }
+.group-explain a { word-break: break-word; }
+
+.md p { margin: 0 0 8px; font-size: 13px; line-height: 1.5; }
+.md p:last-child { margin-bottom: 0; }
+.md ul { margin: 0 0 8px; padding-left: 20px; font-size: 13px; line-height: 1.5; }
+.md code {
+  background: var(--panel-2);
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+.group-explain .md code { background: var(--panel); }
+.count-chip {
+  background: var(--panel-2);
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-variant-numeric: tabular-nums;
+}
+
+.mute-meter { display: inline-flex; align-items: center; gap: 6px; }
+.mute-meter-track {
+  display: flex;
+  width: 40px;
+  height: 6px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--panel-2);
+  gap: 1px;
+  flex-shrink: 0;
+}
+.mute-meter-seg { height: 100%; }
+.mute-meter-label { color: var(--text-dim); white-space: nowrap; }
+
+/* Segment colors depend on both mute state and whether the group actually
+   has any failing finding in it (set via .mute-meter-<state> on the meter):
+   - fail-unmuted: still failing, nothing muted        -> red
+   - fail-partial: failing, some muted some not         -> red + orange
+   - fail-muted:   failing, but fully muted             -> green
+   - pass-unmuted: no failures, nothing muted           -> light gray
+   - pass-muted:   no failures, some/all muted          -> darker gray
+   A fully-passing group is never red/orange — there's nothing to fix —
+   its mute state only changes the gray shade, not the risk color. */
+.mute-meter-fail-unmuted .mute-meter-unmuted,
+.mute-meter-fail-partial .mute-meter-unmuted { background: var(--crit); }
+.mute-meter-fail-partial .mute-meter-muted { background: var(--high); }
+.mute-meter-fail-muted .mute-meter-muted { background: var(--low); }
+.mute-meter-pass-unmuted .mute-meter-unmuted { background: color-mix(in srgb, var(--text-dim) 35%, var(--panel-2)); }
+.mute-meter-pass-muted .mute-meter-muted { background: var(--text-dim); }
+.mute-meter-pass-muted .mute-meter-unmuted { background: color-mix(in srgb, var(--text-dim) 35%, var(--panel-2)); }
+.rule-preview-row td, .rule-edit-row td { padding: 0; border-bottom: 1px solid var(--border); }
+.rule-preview-row .mute-preview { margin: 10px; }
+tbody tr.rule-edit-row:hover { background: none; cursor: default; }
+.rule-edit-row .mute-form-slot:not(:empty) { border-bottom: none; }
+
+.mutelist-form-panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 16px;
+}
+.mutelist-form { padding: 0; }
+.form-row { display: flex; gap: 12px; margin-bottom: 10px; flex-wrap: wrap; }
+.form-row label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--text-dim); flex: 1 1 200px; }
+.form-row label.grow { flex: 2 1 300px; }
+.form-row label.reason-field { flex: 4 1 240px; }
+.form-row label.author-field { flex: 1 1 100px; }
+.form-row input { width: 100%; }
+.field-hint { margin: -4px 0 12px; font-size: 12px; }
+.field-hint code { font-size: 11px; }
+
+/* Fixed 3-column grid so fields always land in the same row/column
+   regardless of viewport width, instead of a flex-wrap layout where a
+   field unpredictably jumps to the next line depending on how much room
+   its neighbors take. */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px 16px;
+  margin-bottom: 12px;
+}
+.form-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--text-dim);
+  min-width: 0;
+}
+.form-grid label.span-full { grid-column: 1 / -1; }
+.form-grid label.span-two-thirds { grid-column: span 2; }
+.form-grid input { width: 100%; }
+@media (max-width: 720px) {
+  .form-grid { grid-template-columns: 1fr; }
+}
+
+.mute-form-slot:not(:empty) {
+  padding: 14px;
+  border-bottom: 1px solid var(--border);
+}
+/* Readonly fields (e.g. Check ID while editing) need to read as
+   "not editable" at a glance, not just slightly dimmer than an editable
+   one — different background (matches the page, not the input surface),
+   no pointer cursor, and a "locked" cue next to the label text itself
+   (not appended after the input, which would wrap onto its own line
+   inside a column-flex label). */
+input[readonly] {
+  background: transparent;
+  border-style: dashed;
+  color: var(--text-dim);
+  cursor: default;
+}
+.label-row { display: flex; align-items: center; }
+label .lock-hint {
+  font-size: 10px;
+  font-weight: 400;
+  color: var(--text-dim);
+  text-transform: none;
+  letter-spacing: 0;
+  margin-left: 4px;
+}
+
+.mute-preview:not(:empty) {
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+}
+.preview-status { margin: 0 0 8px; font-size: 12px; color: var(--text-dim); }
+.preview-status:last-child { margin-bottom: 0; }
+.preview-status.error { color: var(--crit); }
+.preview-status.warning { color: var(--high); }
+.preview-table-wrap { overflow-x: auto; }
+.preview-table { width: 100%; font-size: 12px; }
+.preview-table th, .preview-table td { padding: 4px 8px; }
+.preview-table-wrap.expanded { max-height: 480px; overflow-y: auto; border: 1px solid var(--border); border-radius: 6px; }
+.preview-table-wrap.expanded .preview-table thead th { position: sticky; top: 0; background: var(--panel-2); }
+.preview-row-clickable:hover { background: var(--panel-2); cursor: pointer; }
+.link-btn {
+  display: inline;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  font-size: 12px;
+  color: var(--accent);
+  cursor: pointer;
+  text-decoration: underline;
+}
+.link-btn:hover { color: var(--accent-strong); }
+
+.error { color: var(--crit); }

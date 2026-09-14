@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Prowler Dashboard{% endblock %}</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <script>
+    // Applied before body paint to avoid a flash of the wrong theme.
+    // "auto" (the default, nothing stored) sets no attribute — CSS
+    // prefers-color-scheme handles it — an explicit choice stamps
+    // data-theme="light"/"dark" on <html>.
+    (function () {
+      try {
+        var t = localStorage.getItem("theme");
+        if (t === "light" || t === "dark") {
+          document.documentElement.setAttribute("data-theme", t);
+        }
+      } catch (e) {}
+    })();
+  </script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/">Prowler Triage</a>
+    {% if env %}
+    <nav class="envnav">
+      <span class="env-badge {{ env|env_color_class }}">{{ env }}</span>
+      <a href="/{{ env }}/unique" class="{{ 'active' if active=='unique' }}">Findings</a>
+    </nav>
+    {% endif %}
+    <a href="/mutes" class="global-mutelist-link {{ 'active' if active=='mutes-overview' }}">Mutelist</a>
+    <div class="theme-switcher" id="theme-switcher" role="group" aria-label="Theme">
+      <button type="button" data-theme-choice="light" title="Light theme">☀</button>
+      <button type="button" data-theme-choice="auto" title="Match system">◐</button>
+      <button type="button" data-theme-choice="dark" title="Dark theme">☾</button>
+    </div>
+  </header>
+  <main class="content">
+    {% block content %}{% endblock %}
+  </main>
+  <script src="/static/js/theme.js"></script>
+</body>
+</html>

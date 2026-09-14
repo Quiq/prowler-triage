@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% set active = "mutes-overview" %}
+{% block title %}Mutelist{% endblock %}
+{% block content %}
+<h1>Mutelist</h1>
+<p class="subtle">Every mute rule across every environment. Set Environment to <code>*</code> to mute a check across all environments at once, or list specific ones (comma-separated).</p>
+
+<div class="toolbar">
+  <input id="q" type="search" placeholder="Search check id, reason, account…">
+  <select id="f-env" multiple size="1" data-placeholder="Environment"></select>
+  <select id="f-provider" multiple size="1" data-placeholder="Provider"></select>
+  <button type="button" id="add-rule-btn" class="add-rule-toggle">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+    Add mute rule
+  </button>
+</div>
+
+<div id="add-rule-panel" class="mutelist-form-panel" hidden>
+  <form id="add-rule-form" class="mutelist-form">
+    <div class="form-grid">
+      <label>Environment <input name="environments" placeholder="* for all, or comma-separated e.g. nonprod, prod" required></label>
+      <label>Check ID <input name="check_id" required placeholder="e.g. guardduty_is_enabled"></label>
+      <label>Account UID <input name="account" placeholder="* for all accounts"></label>
+      <label>Resource pattern(s) <input name="resources" placeholder="* or comma-separated, e.g. www*.example.com"></label>
+      <label>Region pattern(s) <input name="regions" placeholder="* or comma-separated"></label>
+      <label>Author <input name="author" placeholder="you@example.com"></label>
+      <label class="span-two-thirds">Reason <input name="reason" required placeholder="Why this is accepted risk / false positive"></label>
+    </div>
+    <p class="subtle field-hint"><code>*</code> matches any sequence of characters, wherever it appears — e.g. <code>www*.example.com</code> matches <code>www.example.com</code> and <code>www2.example.com</code>. Everything else is matched literally (no regex needed).</p>
+    <div id="mute-preview" class="mute-preview"></div>
+    <div class="form-row">
+      <button type="submit" id="submit-rule-btn">Add mute rule</button>
+      <button type="button" class="secondary" id="cancel-add-btn">Cancel</button>
+    </div>
+  </form>
+</div>
+
+<div id="groups"></div>
+
+<div id="detail-backdrop" class="detail-backdrop" hidden></div>
+<div id="detail" class="detail-panel" hidden>
+  <button id="detail-close" class="close-btn">×</button>
+  <div id="detail-body"></div>
+</div>
+
+<script src="/static/js/multiselect.js"></script>
+<script src="/static/js/mdlite.js"></script>
+<script src="/static/js/mutepreview.js"></script>
+<script src="/static/js/finding-detail.js"></script>
+<script src="/static/js/mutes_overview.js"></script>
+{% endblock %}

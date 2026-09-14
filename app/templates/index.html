@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}Prowler Triage{% endblock %}
+{% block content %}
+<h1>Overview</h1>
+
+<div class="summary-bar">
+  <h2 class="summary-bar-title">All environments combined</h2>
+  <div class="card-total">{{ "{:,}".format(totals.groups) }} <span class="card-total-label">unique failing groups</span></div>
+  {% set unmuted_pct = (totals.groups_unmuted / totals.groups * 100) if totals.groups else 0 %}
+  {% set partial_pct = (totals.groups_partial / totals.groups * 100) if totals.groups else 0 %}
+  {% set muted_pct2 = (totals.groups_muted / totals.groups * 100) if totals.groups else 0 %}
+  <div class="fp-meter">
+    <div class="fp-meter-track">
+      <div class="fp-seg fp-seg-group-unmuted" style="width: {{ unmuted_pct }}%"></div>
+      <div class="fp-seg fp-seg-group-partial" style="width: {{ partial_pct }}%"></div>
+      <div class="fp-seg fp-seg-group-muted" style="width: {{ muted_pct2 }}%"></div>
+    </div>
+    <div class="fp-meter-labels">
+      <span class="fp-label-group-unmuted">{{ totals.groups_unmuted }} unmuted</span>
+      <span class="fp-label-group-partial">{{ totals.groups_partial }} partially muted</span>
+      <span class="fp-label-group-muted">{{ totals.groups_muted }} fully muted</span>
+    </div>
+  </div>
+  <dl class="stat-list">
+    <dt>Environments</dt><dd>{{ totals.environments }}</dd>
+    <dt>Total findings</dt><dd>{{ "{:,}".format(totals.total) }}</dd>
+    <dt>Critical failing findings</dt><dd class="sev-critical">{{ totals.critical }}</dd>
+    <dt>High failing findings</dt><dd class="sev-high">{{ totals.high }}</dd>
+  </dl>
+</div>
+
+<h2>Environments</h2>
+
+<div class="env-grid">
+  {% for env in environments %}
+  {% set s = summaries.get(env, {}) %}
+  {% if s.get('error') %}
+  <div class="env-card env-card-error">
+  {% else %}
+  <div class="env-card" data-href="/{{ env }}/unique" role="link" tabindex="0">
+  {% endif %}
+    <div class="env-card-head">
+      <span class="provider-icons">
+        {% for provider in s.get('providers', []) %}
+          {% set icon = provider|provider_icon %}
+          {% if icon %}
+            <img class="provider-icon" src="{{ icon }}" alt="{{ provider }}" title="{{ provider }}">
+          {% endif %}
+        {% endfor %}
+      </span>
+      <span class="env-badge {{ env|env_color_class }}">{{ env }}</span>
+    </div>
+    {% if s.get('error') %}
+      <p class="error">{{ s.error }}</p>
+    {% else %}
+      <div class="card-total">{{ "{:,}".format(s.groups) }} <span class="card-total-label">unique failing groups</span></div>
+
+      {% set unmuted_pct = (s.groups_unmuted / s.groups * 100) if s.groups else 0 %}
+      {% set partial_pct = (s.groups_partial / s.groups * 100) if s.groups else 0 %}
+      {% set muted_pct2 = (s.groups_muted / s.groups * 100) if s.groups else 0 %}
+      <div class="fp-meter">
+        <div class="fp-meter-track">
+          <div class="fp-seg fp-seg-group-unmuted" style="width: {{ unmuted_pct }}%"></div>
+          <div class="fp-seg fp-seg-group-partial" style="width: {{ partial_pct }}%"></div>
+          <div class="fp-seg fp-seg-group-muted" style="width: {{ muted_pct2 }}%"></div>
+        </div>
+        <div class="fp-meter-labels">
+          <span class="fp-label-group-unmuted">{{ s.groups_unmuted }} unmuted</span>
+          <span class="fp-label-group-partial">{{ s.groups_partial }} partial</span>
+          <span class="fp-label-group-muted">{{ s.groups_muted }} muted</span>
+        </div>
+      </div>
+
+      <dl class="stat-list">
+        <dt>Total findings</dt><dd>{{ "{:,}".format(s.total) }}</dd>
+        <dt>Critical failing findings</dt><dd class="sev-critical">{{ s.critical }}</dd>
+        <dt>High failing findings</dt><dd class="sev-high">{{ s.high }}</dd>
+        <dt>Accounts</dt><dd>{{ s.accounts }}</dd>
+      </dl>
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
+
+<script src="/static/js/index.js"></script>
+{% endblock %}

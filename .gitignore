@@ -1,0 +1,19 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Prowler exports — real finding data, never commit
+data/*.csv
+data/*.ocsf.json
+data/*.tgz
+!data/.gitkeep
+
+# Parquet cache derived from data/*.csv — regenerable, never commit
+cache/
+
+# Mutelist may reference real resource IDs/accounts — keep local
+mutelists/*.yaml
+mutelists/*.yml
+
+.DS_Store

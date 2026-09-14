@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% set active = "unique" %}
+{% block title %}{{ env }} · Findings{% endblock %}
+{% block content %}
+<h1>Findings — {{ env }}</h1>
+<p class="subtle">Findings grouped by check, deduped across accounts/resources/regions — defaults to failing groups. Click a resource row for its full detail.</p>
+
+<div class="toolbar">
+  <input id="q" type="search" placeholder="Search title, resource, check id…">
+  <select id="f-status" multiple size="1" data-placeholder="Status"></select>
+  <select id="f-severity" multiple size="1" data-placeholder="Severity"></select>
+  <select id="f-service" multiple size="1" data-placeholder="Service"></select>
+  <select id="f-region" multiple size="1" data-placeholder="Region"></select>
+  <select id="f-account" multiple size="1" data-placeholder="Account"></select>
+  <select id="f-mute">
+    <option value="">Mute: any</option>
+    <option value="unmuted">Has unmuted instances</option>
+    <option value="muted">Fully muted only</option>
+  </select>
+</div>
+
+<div id="summary" class="result-summary"></div>
+
+<div id="groups"></div>
+
+<div id="detail-backdrop" class="detail-backdrop" hidden></div>
+<div id="detail" class="detail-panel" hidden>
+  <button id="detail-close" class="close-btn">×</button>
+  <div id="detail-body"></div>
+</div>
+
+<div id="mute-modal-backdrop" class="modal-backdrop" hidden>
+  <div class="modal-panel">
+    <button id="mute-modal-close" class="close-btn">×</button>
+    <div id="mute-modal-body"></div>
+  </div>
+</div>
+
+<script src="/static/js/multiselect.js"></script>
+<script src="/static/js/mdlite.js"></script>
+<script src="/static/js/mutepreview.js"></script>
+<script src="/static/js/finding-detail.js"></script>
+<script>window.ENV = {{ env|tojson }};</script>
+<script src="/static/js/unique.js"></script>
+{% endblock %}
