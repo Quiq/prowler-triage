@@ -23,7 +23,7 @@
       <label>Account UID <input name="account" placeholder="* for all accounts"></label>
       <label>Resource pattern(s) <input name="resources" placeholder="* or comma-separated, e.g. www*.example.com"></label>
       <label>Region pattern(s) <input name="regions" placeholder="* or comma-separated"></label>
-      <label>Author <input name="author" placeholder="you@example.com"></label>
+      <label>Author <input name="author" value="{{ current_user }}" placeholder="you@example.com"></label>
       <label class="span-two-thirds">Reason <input name="reason" required placeholder="Why this is accepted risk / false positive"></label>
     </div>
     <p class="subtle field-hint"><code>*</code> matches any sequence of characters, wherever it appears — e.g. <code>www*.example.com</code> matches <code>www.example.com</code> and <code>www2.example.com</code>. Everything else is matched literally (no regex needed).</p>

@@ -23,6 +23,14 @@ from .mutelist import (
 bp = Blueprint("main", __name__)
 
 
+@bp.app_context_processor
+def inject_current_user():
+    # Set by an upstream auth proxy (e.g. oauth2-proxy) in front of this
+    # app; used only to prefill the mutelist "Author" field, never trusted
+    # for access control here.
+    return {"current_user": request.headers.get("X-Webauth-User", "").strip()}
+
+
 def _env_or_404(env):
     if env not in ENVIRONMENTS:
         return None

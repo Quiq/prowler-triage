@@ -221,7 +221,7 @@
         <div class="mute-preview"></div>
         <div class="form-row">
           <label class="reason-field">Reason <input name="reason" required placeholder="Why this is accepted risk / false positive"></label>
-          <label class="author-field">Author <input name="author" placeholder="you@example.com"></label>
+          <label class="author-field">Author <input name="author" value="${escapeHtml(document.body.dataset.currentUser || "")}" placeholder="you@example.com"></label>
         </div>
         <div class="form-row">
           <button type="submit">Confirm mute</button>

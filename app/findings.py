@@ -317,11 +317,17 @@ def preview_mute_environments(environments, account, check_id, resources, region
     rule. Each sample is tagged with its source environment (`ENV`) since
     otherwise a multi-env preview table gives no way to tell which
     environment a matched finding actually came from."""
+    from .data import ENVIRONMENTS
+
     total_matches = 0
     already_muted = 0
     samples = []
     per_environment = {}
     for env in environments:
+        if env not in ENVIRONMENTS:
+            # A rule can name an environment whose CSV was since removed or
+            # renamed — skip it rather than letting the whole preview 500.
+            continue
         result = preview_mute(env, account, check_id, resources, regions, limit=limit)
         total_matches += result["total_matches"]
         already_muted += result["already_muted"]
